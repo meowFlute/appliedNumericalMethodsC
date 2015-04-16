@@ -1,11 +1,11 @@
 #include <stdlib.h>
 #include <stdio.h>
 #define NUM_POINTS 5
-#define NUM_COMMANDS 4
+#define NUM_COMMANDS 2
 int main()
 {
-    char * commandsForGnuplot[] = {"set title \"special plot\"", "set terminal png", "set output \"output2.png\" ", "plot exp(-0.2*x)*sin(x)"};
-    FILE * gnuplotPipe = popen ("gnuplot -persistent", "w");
+    char * commandsForGnuplot[] = {"set title \"special plot\"", "plot exp(-0.2*x)*sin(x)"};
+    FILE * gnuplotPipe = _popen ("gnuplot -persistent", "w");
 
     int i;
     //plot that souldja boi

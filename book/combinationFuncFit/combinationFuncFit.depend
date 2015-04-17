@@ -1,0 +1,6 @@
+# depslib dependency file v1.0
+1429317430 source:c:\users\scott\documents\appliednumericalmethodsc\book\combinationfuncfit\lincombfit.c
+	<stdio.h>
+	<stdlib.h>
+	<math.h>
+

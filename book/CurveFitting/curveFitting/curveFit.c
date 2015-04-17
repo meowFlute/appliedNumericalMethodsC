@@ -11,150 +11,154 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#define NUM_POINTS 6
 
 /*
     Variable explanations:
 
 */
-void gauss();
+void gauss(), gnuprint();
 double pwr(),fun();
 
 int main(void)
 {
-    int i, j, jex, jj, k, k_, lp, m, n, nord, _i, _r;
-    double fk, gg[100], yy, fljj;
-    double x[100], y[100];
-    double a[10][10], power;
-    static no_of_data = 6;
-    static int _aini = 1;
+    int i, j, jj, k, m, nord, numCoef;
+    double fk, gg[100], yy;
+    float resolution, lowerBound, upperBound;
+    double x[NUM_POINTS], y[NUM_POINTS];
+    double a[10][10];
+    static int no_of_data = NUM_POINTS;
     static double x_ini[] = {0.1, 0.4, 0.5, 0.7, 0.7, 0.9};
     static double y_ini[] = {0.61, 0.92, 0.99, 1.52, 1.47, 2.03};
-    L_10:
-        for( j = 1; j<= no_of_data; j++)
+    for( j = 0; j < no_of_data; j++)
+    {
+        x[j] = x_ini[j];
+        y[j] = y_ini[j];
+    }
+    // Polynomial fitting
+    printf("Type order of polynomial (maximum %d) : ", no_of_data-1);
+    //nord = 5;
+    scanf("%d", &nord);
+    printf("\nPrint resolution? ");
+    scanf("%f", &resolution);
+    printf("\nPrint Lower Bound? ");
+    scanf("%f", &lowerBound);
+    printf("\nPrint Upper Bound? ");
+    scanf("%f", &upperBound);
+    double coefficients[nord+1];
+    numCoef = nord+1;
+    m = nord + 1;
+    for(k = 0; k < m + 1; k++)
+    {
+        for(j = 0; j < m + 1; j++)
         {
-            x[j] = x_ini[j-1];
-            y[j] = y_ini[j-1];
+            a[k][j] = 0.0;
         }
-        printf("\nCSL/C8-1       Curve Fitting by Least Square \n");
-        printf("Type 0 for polynomial fitting\n");
-        printf("     1 for linear combination");
-        scanf("%d", &lp );
-        // Polynomial fitting
-        if( lp == 0)
+    }
+    // Developing the matrix for polynomial fitting
+    for (k = 0; k < m; k++)
+    {
+        for(i = 0; i < no_of_data; i++)
         {
-            printf("Type order of polynomial\n");
-            scanf("%d", &nord);
-            m = nord + 1;
-            for(k = 1; k <= m; k++)
+            for(j = 0; j < m; j++)
             {
-                for(j = 1; j <= m + 1; j++)
-                {
-                    a[k][j] = 0.0;
-                }
+                jj = k + j;
+                a[k][j] = a[k][j] + pwr(x[i], jj);
             }
-            // Developing the matrix for polynomial fitting
-            for (k = 1; k <= m; k++)
-            {
-                for(i = 1; i <= no_of_data; i++)
-                {
-                    for(j = 1; j <= m; j++)
-                    {
-                        jj = k - 1 + j - 1;
-                        a[k][j] = a[k][j] + pwr(x[i], jj);
-                    }
-                    yy = pwr(x[i], k-1);
-                    a[k][m + 1] = a[k][m + 1] + y[i]*yy;
-                }
-            }
+            yy = pwr(x[i], k);
+            a[k][m] = a[k][m] + y[i]*yy;
         }
-        else
+    }
+    //Printing matrix
+    printf("\n\nMatrix to solve\n");
+    printf("-------------------------\n");
+    for( i = 0; i < m; i++)
+    {
+        for( j = 0; j < (m + 1); j++)
         {
-            printf("Type the number of functions in linear combination\n");
-            printf("   (currently only four functions are available)\n");
-            //m is the number of functions linearly combined
-            scanf("%d", &m);
-            for(k = 1; k <= m; k++)
-            {
-                for(j = 1; j <= m + 1; j++)
-                {
-                    a[k][j] = 0.0;
-                }
-            }
-            for (k = 1; k <= m; k++)
-            {
-                for(i = 1; i <= no_of_data; i++)
-                {
-                    fk = fun( k, x[i]);
-                    for(j = 1; j <= m; j++)
-                    {
-                        a[k][j] = a[k][j] + fk*fun(j, x[i]);
-                    }
-                    a[k][m + 1] = a[k][m + 1] + y[i]*fk;
-                }
-            }
+            printf( " %11.4e ", a[i][j]);
         }
-        //Printing matrix
-        for( i = 1; i <= m; i++)
+        printf( "\n" );
+    }
+    gauss( m, a);
+    printf( "\n\n Power coefficients determined \n");
+    printf( "-------------------------------------\n");
+    printf( "   Power         Coefficient       \n" );
+    printf( "--------------------------------------------\n" );
+    for( i = 0; i < m; i++)
+    {
+        printf(" %3d             %12.5e \n", i - 1, a[i][m]);
+        coefficients[i] = a[i][m];
+    }
+    printf( "--------------------------------------------\n" );
+    for( i = 0; i < no_of_data; i++)
+    {
+        gg[i] = 0.0;
+        for( k = 0; k < m; k++)
         {
-            for( j = 1; j <= (m + 1); j++)
-            {
-                printf( " %11.4e ", a[i][j]);
-            }
-            printf( "\n" );
+            gg[i] = gg[i] + a[k][m]*pwr(x[i],k-1);
         }
-        n = m;
-        gauss( m, a);
-        printf( "\n Power coefficients determined \n");
-        printf( "-------------------------------------\n");
-        if( lp == 1)
+    }
+    printf( "Error evaluation\n" );
+    printf( "----------------------------------------------------------\n" );
+    printf( "   i   x(i)          y(i)          Curve fitted  Deviation\n" );
+    printf( "----------------------------------------------------------\n" );
+    for( i = 0; i< no_of_data; i++)
+    {
+    printf( "%4d   %11.4e   %11.4e   %11.4e   %11.4e \n", i, x[i], y[i], gg[i], y[i] - gg[i]);
+    }
+    printf( "----------------------------------------------------------\n" );
+    gnuprint(resolution, upperBound, lowerBound, coefficients, numCoef, x_ini, y_ini);
+    exit(0);
+}
+
+void gnuprint(resolution, upperBound, lowerBound, coefficients, numCoef, x_ini, y_ini)
+double resolution; double upperBound; double lowerBound; double coefficients[]; int numCoef;
+double x_ini[]; double y_ini[];
+{
+    FILE * gnuplotPipe = popen ("gnuplot -persistent", "w");
+    FILE * curveFile = fopen("curve.dat", "w");
+    FILE * pointFile = fopen("points.dat", "w");
+
+    int i;
+    double currentPoint, yans;
+
+    //Print the curve fit data to a file
+    currentPoint = lowerBound;
+    while(currentPoint <= upperBound)
+    {
+        yans = 0;
+        for( i = 0; i < numCoef; i++)
         {
-            printf( "   Function      Coefficient       \n" );
+            yans += coefficients[i]*pwr(currentPoint,i);
         }
-        else
-        {
-            printf( "   Power         Coefficient       \n" );
-        }
-        printf( "--------------------------------------------\n" );
-        for( i = 1; i <= m; i++)
-        {
-            if( lp == 1)
-            {
-                printf(" %3d             %12.5e \n", i, a[i][m+1]);
-            }
-            else
-            {
-                printf(" %3d             %12.5e \n", i - 1, a[i][m+1]);
-            }
-        }
-        printf( "--------------------------------------------\n" );
-        for( i = 1; i <= no_of_data; i++)
-        {
-            gg[i] = 0.0;
-            for( k = 1; k <= m; k++)
-            {
-                if( lp == 1 )
-                {
-                    gg[i] = gg[i] + a[k][m+1]*fun(k, x[i]);
-                }
-                else
-                {
-                    gg[i] = gg[i] + a[k][m+1]*pwr(x[i],k-1);
-                }
-            }
-        }
-        printf( "Error evaluation\n" );
-        printf( "----------------------------------------------------------\n" );
-        printf( "   i   x(i)          y(i)          Curve fitted  Deviation\n" );
-        printf( "----------------------------------------------------------\n" );
-        for( i = 1; i<= no_of_data; i++)
-        {
-        printf( "%4d   %11.4e   %11.4e   %11.4e   %11.4e \n", i, x[i], y[i], gg[i], y[i] - gg[i]);
-        }
-        printf( "----------------------------------------------------------\n" );
-        printf( "\n Type 0 to stop, 1 to continue.\n"); scanf("%d", &k);
-        if(k != 0)
-            goto L_10;
-        exit(0);
+        fprintf(curveFile, "%lf %lf \n",currentPoint,yans);
+        currentPoint += resolution;
+    }
+    fclose(curveFile);
+
+    //print the sample data to a file
+    for( i = 0; i < NUM_POINTS; i++)
+    {
+        fprintf(pointFile, "%lf %lf \n",x_ini[i],y_ini[i]);
+    }
+    fclose(pointFile);
+
+    //pipe the info to gnuplot
+    int numCommands = 0;
+    char * title = "set title \"Polynomial Curve Fit to Sample Data\"";
+    numCommands++;
+    char * output = "set terminal png \nset output \"polynomialFit5.png\" \nunset key";
+    numCommands++;
+    char * plot = "plot 'curve.dat' with lines, 'points.dat' with points lt rgb \"black\" pt 7";
+    numCommands++;
+    char * commandsForGnuplot[] = {title, output, plot};
+    //char * commandsForGnuplot[] = {title, plot};
+    for(i = 0; i < numCommands; i++)
+    {
+        fprintf(gnuplotPipe, "%s \n", commandsForGnuplot[i]);
+    }
+    pclose(gnuplotPipe);
 }
 
 double pwr(x,n)
@@ -177,24 +181,24 @@ int n; double a[][10];
 {
     int i, ipv, j, jc, jr, k, kc, nv;
     double r, tm, va;
-    for ( i = 1; i <= (n-1); i++)
+    for ( i = 0; i < (n-1); i++)
     {
         ipv = i;
-        for( j = i + 1; j <= n; j++)
+        for( j = i + 1; j < n; j++)
         {
             if( fabs(a[ipv][i]) < fabs(a[j][i]) )
                 ipv = j;
         }
         if(ipv != i)
         {
-            for( jc = 1; jc <= (n+1); jc++)
+            for( jc = 0; jc < (n+1); jc++)
             {
                 tm = a[i][jc];
                 a[i][jc] = a[ipv][jc];
                 a[ipv][jc] = tm;
             }
         }
-        for ( jr = i + 1; jr <= n; jr++ )
+        for ( jr = i + 1; jr < n; jr++ )
         {
             if( a[jr][i] != 0)
             {
@@ -204,27 +208,28 @@ int n; double a[][10];
                     exit(0);
                 }
                 r = a[jr][i]/a[i][i];
-                for( kc = i + 1; kc <= (n + 1); kc++)
+                for( kc = i + 1; kc < (n + 1); kc++)
                 {
                     a[jr][kc] = a[jr][kc] - r*a[i][kc];
                 }
             }
         }
     }
-    if( a[n][n] == 0.0)
+    if( a[n-1][n-1] == 0.0)
     {
         printf("Matrix is singular!\n");
         exit(0);
     }
-    a[n][n+1] = a[n][n+1]/a[n][n];
-    for( nv = n - 1; nv >= 1; nv--)
+    int p = n - 1;
+    a[p][p+1] = a[p][p+1]/a[p][p];
+    for( nv = p - 1; nv >= 0; nv--)
     {
-        va = a[nv][n+1];
-        for(k = nv + 1; k <= n; k++)
+        va = a[nv][p+1];
+        for(k = nv + 1; k <= p; k++)
         {
-            va = va - a[nv][k]*a[k][n+1];
+            va = va - a[nv][k]*a[k][p+1];
         }
-        a[nv][n+1] = va/a[nv][nv];
+        a[nv][p+1] = va/a[nv][nv];
     }
     return;
 }

@@ -28,14 +28,16 @@ int main(int argc, char *argv[])
         printf("%d     |  %g       |  %g\n", i, x[i], f[i]);
     }
     //get resoluiton of point calculations
-    printf("\nResolution?  ");
-    scanf( "%f", &resolution);
-
+    //printf("\nResolution?  ");
+    //scanf( "%f", &resolution);
+    resolution = 0.1;
     //determine bounds
-    printf("\nLower Bound?  ");
-    scanf( "%f", &bounds[0]);
-    printf("\nUpper Bound?  ");
-    scanf( "%f", &bounds[1]);
+    //printf("\nLower Bound?  ");
+    //scanf( "%f", &bounds[0]);
+    bounds[0] = 0.5;
+    //printf("\nUpper Bound?  ");
+    //scanf( "%f", &bounds[1]);
+    bounds[1] = 4.5;
     if(!(x[0] <= bounds[0] && bounds[1] <= x[n]))
         printf("(WARNING: EXTRAPOLATION CAN BE UNACCURATE)\n");
 
@@ -72,9 +74,11 @@ int main(int argc, char *argv[])
     int numCommands = 0;
     char * title = "set title \"Lagrange Interpolation of Data Points\"";
     numCommands++;
-    char * plot = "plot 'points.dat' with lines, 'data.dat' with points";
+    char * output = "set terminal png \nset output \"interpolation.png\" \nunset key";
     numCommands++;
-    char * commandsForGnuplot[] = {title, plot};
+    char * plot = "plot 'points.dat' with lines, 'data.dat' with points lt rgb \"black\" pt 7";
+    numCommands++;
+    char * commandsForGnuplot[] = {title, output, plot};
     for(i = 0; i < numCommands; i++)
     {
         fprintf(gnuplotPipe, "%s \n", commandsForGnuplot[i]);
